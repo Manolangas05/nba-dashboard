@@ -15,7 +15,6 @@ def load_data():
 df = load_data()
 
 st.sidebar.title("Filtros")
-
 años_disponibles = sorted(df['year_id'].unique())
 año_seleccionado = st.sidebar.selectbox(
     "Selecciona un año:",
@@ -45,7 +44,6 @@ elif tipo_juego == "Playoffs":
     df_filtrado = df_filtrado[df_filtrado['is_playoffs'] == 1]
 
 df_filtrado = df_filtrado.sort_values('date_game').reset_index(drop=True)
-
 df_filtrado['wins_cumsum'] = (df_filtrado['game_result'] == 'W').cumsum()
 df_filtrado['losses_cumsum'] = (df_filtrado['game_result'] == 'L').cumsum()
 
@@ -60,30 +58,25 @@ with col3:
     total_losses = (df_filtrado['game_result'] == 'L').sum()
     st.metric("Juegos Perdidos", total_losses)
 
-st.subheader("Acumulado de Juegos Ganados y Perdidos")
-
-fig, ax = plt.subplots(figsize=(12, 6))
-
-x_values = range(1, len(df_filtrado) + 1)
-
-ax.plot(x_values, df_filtrado['wins_cumsum'], 
-        label='Juegos Ganados', color='#2ecc71', linewidth=2.5, marker='o', markersize=4)
-ax.plot(x_values, df_filtrado['losses_cumsum'], 
-        label='Juegos Perdidos', color='#e74c3c', linewidth=2.5, marker='o', markersize=4)
-
-ax.set_xlabel('Numero de Juego', fontsize=12)
-ax.set_ylabel('Acumulado', fontsize=12)
-ax.set_title(f'{equipo_seleccionado} - Año {año_seleccionado} - {tipo_juego}', fontsize=14, fontweight='bold')
-ax.legend(fontsize=11, loc='upper left')
-ax.grid(True, alpha=0.3)
-
-st.pyplot(fig)
-
-st.subheader("Distribucion de Resultados")
-
 col1, col2 = st.columns([1, 1])
 
 with col1:
+    st.subheader("Acumulado de Juegos Ganados y Perdidos")
+    fig, ax = plt.subplots(figsize=(10, 6))
+    x_values = range(1, len(df_filtrado) + 1)
+    ax.plot(x_values, df_filtrado['wins_cumsum'], 
+            label='Juegos Ganados', color='#2ecc71', linewidth=2.5, marker='o', markersize=4)
+    ax.plot(x_values, df_filtrado['losses_cumsum'], 
+            label='Juegos Perdidos', color='#e74c3c', linewidth=2.5, marker='o', markersize=4)
+    ax.set_xlabel('Numero de Juego', fontsize=12)
+    ax.set_ylabel('Acumulado', fontsize=12)
+    ax.set_title(f'{equipo_seleccionado} - Año {año_seleccionado} - {tipo_juego}', fontsize=14, fontweight='bold')
+    ax.legend(fontsize=11, loc='upper left')
+    ax.grid(True, alpha=0.3)
+    st.pyplot(fig)
+
+with col2:
+    st.subheader("Distribucion de Resultados")
     sizes = [total_wins, total_losses]
     labels = [f'Ganados\n{total_wins}', f'Perdidos\n{total_losses}']
     colors = ['#2ecc71', '#e74c3c']
@@ -104,24 +97,3 @@ with col1:
                   fontsize=12, fontweight='bold', pad=20)
     
     st.pyplot(fig2)
-
-with col2:
-    st.write("### Estadisticas Detalladas")
-    
-    stats_data = {
-        'Metrica': ['Total de Juegos', 'Juegos Ganados', 'Juegos Perdidos', 'Porcentaje de Victoria'],
-        'Valor': [
-            f"{total_games}",
-            f"{total_wins}",
-            f"{total_losses}",
-            f"{(total_wins/total_games*100):.1f}%" if total_games > 0 else "0%"
-        ]
-    }
-    
-    stats_df = pd.DataFrame(stats_data)
-    st.dataframe(stats_df, use_container_width=True, hide_index=True)
-
-if st.checkbox("Mostrar datos detallados"):
-    st.subheader("Datos Filtrados")
-    columnas_mostrar = ['date_game', 'team_id', 'pts', 'opp_id', 'opp_pts', 'game_result', 'is_playoffs']
-    st.dataframe(df_filtrado[columnas_mostrar], use_container_width=True)
