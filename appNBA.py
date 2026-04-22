@@ -3,11 +3,9 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Configuración de la página
 st.set_page_config(page_title="NBA Dashboard", layout="wide")
-st.title("📊 NBA Dashboard - Análisis de Temporadas")
+st.title("NBA Dashboard - Analisis de Temporadas")
 
-# Cargar datos
 @st.cache_data
 def load_data():
     df = pd.read_csv('nba_all_elo.csv')
@@ -16,10 +14,8 @@ def load_data():
 
 df = load_data()
 
-# Barra lateral
-st.sidebar.title("⚙️ Filtros")
+st.sidebar.title("Filtros")
 
-# Selector de año
 años_disponibles = sorted(df['year_id'].unique())
 año_seleccionado = st.sidebar.selectbox(
     "Selecciona un año:",
@@ -27,41 +23,32 @@ año_seleccionado = st.sidebar.selectbox(
     index=len(años_disponibles)-1
 )
 
-# Filtrar por año primero
 df_año = df[df['year_id'] == año_seleccionado]
 
-# Selector de equipo
 equipos = sorted(df_año['team_id'].unique())
 equipo_seleccionado = st.sidebar.selectbox(
     "Selecciona un equipo:",
     equipos
 )
 
-# Pills para tipo de juego
 tipo_juego = st.sidebar.radio(
     "Tipo de juego:",
     options=["Temporada Regular", "Playoffs", "Ambos"],
     horizontal=True
 )
 
-# Filtrar datos según selecciones
 df_filtrado = df_año[df_año['team_id'] == equipo_seleccionado].copy()
 
-# Aplicar filtro de tipo de juego
 if tipo_juego == "Temporada Regular":
     df_filtrado = df_filtrado[df_filtrado['is_playoffs'] == 0]
 elif tipo_juego == "Playoffs":
     df_filtrado = df_filtrado[df_filtrado['is_playoffs'] == 1]
-# Si es "Ambos", no filtramos por is_playoffs
 
-# Ordenar por fecha
 df_filtrado = df_filtrado.sort_values('date_game').reset_index(drop=True)
 
-# Calcular juegos ganados y perdidos acumulados
 df_filtrado['wins_cumsum'] = (df_filtrado['game_result'] == 'W').cumsum()
 df_filtrado['losses_cumsum'] = (df_filtrado['game_result'] == 'L').cumsum()
 
-# Mostrar información en el dashboard
 col1, col2, col3 = st.columns(3)
 with col1:
     total_games = len(df_filtrado)
@@ -73,12 +60,10 @@ with col3:
     total_losses = (df_filtrado['game_result'] == 'L').sum()
     st.metric("Juegos Perdidos", total_losses)
 
-# Gráfica de líneas - Acumulado de juegos ganados y perdidos
-st.subheader("📈 Acumulado de Juegos Ganados y Perdidos")
+st.subheader("Acumulado de Juegos Ganados y Perdidos")
 
 fig, ax = plt.subplots(figsize=(12, 6))
 
-# Crear x como número de juego
 x_values = range(1, len(df_filtrado) + 1)
 
 ax.plot(x_values, df_filtrado['wins_cumsum'], 
@@ -86,7 +71,7 @@ ax.plot(x_values, df_filtrado['wins_cumsum'],
 ax.plot(x_values, df_filtrado['losses_cumsum'], 
         label='Juegos Perdidos', color='#e74c3c', linewidth=2.5, marker='o', markersize=4)
 
-ax.set_xlabel('Número de Juego', fontsize=12)
+ax.set_xlabel('Numero de Juego', fontsize=12)
 ax.set_ylabel('Acumulado', fontsize=12)
 ax.set_title(f'{equipo_seleccionado} - Año {año_seleccionado} - {tipo_juego}', fontsize=14, fontweight='bold')
 ax.legend(fontsize=11, loc='upper left')
@@ -94,8 +79,7 @@ ax.grid(True, alpha=0.3)
 
 st.pyplot(fig)
 
-# Gráfica de pastel - Porcentaje de W y L
-st.subheader("🥧 Distribución de Resultados")
+st.subheader("Distribucion de Resultados")
 
 col1, col2 = st.columns([1, 1])
 
@@ -122,11 +106,10 @@ with col1:
     st.pyplot(fig2)
 
 with col2:
-    # Tabla con detalles
-    st.write("### 📊 Estadísticas Detalladas")
+    st.write("### Estadisticas Detalladas")
     
     stats_data = {
-        'Métrica': ['Total de Juegos', 'Juegos Ganados', 'Juegos Perdidos', 'Porcentaje de Victoria'],
+        'Metrica': ['Total de Juegos', 'Juegos Ganados', 'Juegos Perdidos', 'Porcentaje de Victoria'],
         'Valor': [
             f"{total_games}",
             f"{total_wins}",
@@ -138,8 +121,7 @@ with col2:
     stats_df = pd.DataFrame(stats_data)
     st.dataframe(stats_df, use_container_width=True, hide_index=True)
 
-# Mostrar datos si lo desea el usuario
 if st.checkbox("Mostrar datos detallados"):
-    st.subheader("📋 Datos Filtrados")
+    st.subheader("Datos Filtrados")
     columnas_mostrar = ['date_game', 'team_id', 'pts', 'opp_id', 'opp_pts', 'game_result', 'is_playoffs']
     st.dataframe(df_filtrado[columnas_mostrar], use_container_width=True)
